@@ -14,19 +14,33 @@ from __future__ import annotations
 
 import logging
 import time
+from contextlib import asynccontextmanager
 from xml.sax.saxutils import escape
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException, Request, Response
 from twilio.request_validator import RequestValidator
 
 import db
 from agent import run_agent
 from config import settings
+from worker.process_reminders import main as process_reminders
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("personal-agent")
 
-app = FastAPI(title="personal-agent")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(process_reminders, "interval", minutes=1)
+    scheduler.start()
+    logger.info("reminder scheduler started")
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(title="personal-agent", lifespan=lifespan)
 validator = RequestValidator(settings.TWILIO_AUTH_TOKEN)
 
 
