@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: personal-agent
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # --forwarded-allow-ips="*" makes uvicorn trust Render's proxy headers,
+    # so request.url.scheme is "https" — required for Twilio signature
+    # validation to match the URL Twilio actually signed.
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --forwarded-allow-ips="*"
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: DEFAULT_TIMEZONE
+        value: America/New_York
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5
+      - key: MAX_TOOL_ITERATIONS
+        value: "5"
+
+  - type: cron
+    name: reminder-worker
+    runtime: python
+    schedule: "* * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m worker.process_reminders
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: DEFAULT_TIMEZONE
+        value: America/New_York
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5
+      - key: MAX_TOOL_ITERATIONS
+        value: "5"

@@ -1,0 +1,12 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.vscode/
+*.egg-info/
+.mcp.json
+supabase/.temp/
+.claude/settings.local.json
