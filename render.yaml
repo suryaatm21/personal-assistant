@@ -32,6 +32,7 @@ services:
   - type: cron
     name: reminder-worker
     runtime: python
+    plan: free
     schedule: "* * * * *"
     buildCommand: pip install -r requirements.txt
     startCommand: python -m worker.process_reminders
